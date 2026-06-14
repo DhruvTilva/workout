@@ -13,14 +13,42 @@ document.addEventListener('DOMContentLoaded', () => {
     const progressBarFill = document.getElementById('progress-bar-fill');
     const streakCountEl = document.getElementById('streak-count');
 
+    // Calendar Elements
+    const calendarMonthYear = document.getElementById('calendar-month-year');
+    const calendarGrid = document.querySelector('.calendar-grid');
+    const workoutsMonthCount = document.getElementById('workouts-month-count');
+    const consistencyPercent = document.getElementById('consistency-percent');
+    
+    // New Calendar Enhancements
+    const calendarSummary = document.getElementById('calendar-summary');
+    const calendarExpanded = document.getElementById('calendar-expanded');
+    const toggleCalendarDown = document.getElementById('toggle-calendar-down');
+    const toggleCalendarUp = document.getElementById('toggle-calendar-up');
+    const prevMonthBtn = document.getElementById('prev-month-btn');
+    const nextMonthBtn = document.getElementById('next-month-btn');
+    const goTodayBtn = document.getElementById('go-today-btn');
+    const summaryWorkouts = document.getElementById('summary-workouts');
+    const summaryConsistency = document.getElementById('summary-consistency');
+    
+    // Modal Elements
+    const calendarModal = document.getElementById('calendar-modal');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    const modalDate = document.getElementById('modal-date');
+    const modalStatus = document.getElementById('modal-status');
+    const modalDetails = document.getElementById('modal-details');
+
     // State
     let currentDayId = null;
+    let currentViewDate = new Date();
+    let currentViewMonth = currentViewDate.getMonth();
+    let currentViewYear = currentViewDate.getFullYear();
 
-    // Helper: Get today's date string (YYYY-MM-DD)
-    const getTodayString = () => {
-        const today = new Date();
-        return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    // Helper: Get formatted date string (YYYY-MM-DD)
+    const getDateString = (dateObj) => {
+        return `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
     };
+
+    const getTodayString = () => getDateString(new Date());
 
     // Helper: Calculate days between two date strings
     const getDaysDifference = (dateStr1, dateStr2) => {
@@ -181,14 +209,198 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const percentage = total === 0 ? 0 : Math.round((completedCount / total) * 100);
         progressBarFill.style.width = `${percentage}%`;
+
+        // Automatically mark day as completed if all exercises are done
+        if (completedCount === total && total > 0) {
+            if (localStorage.getItem(`gym_dayCompleted_${today}`) !== 'true') {
+                localStorage.setItem(`gym_dayCompleted_${today}`, 'true');
+                updateStreak(); // Auto update streak
+                renderCalendar();
+            }
+        } else if (completedCount < total && localStorage.getItem(`gym_dayCompleted_${today}`) === 'true') {
+            localStorage.setItem(`gym_dayCompleted_${today}`, 'false');
+            renderCalendar();
+        }
     };
 
+    // --- Calendar Logic ---
+    const isDayCompleted = (dateStr) => {
+        return localStorage.getItem(`gym_dayCompleted_${dateStr}`) === 'true';
+    };
+
+    const toggleDayCompletion = (dateStr) => {
+        if (isDayCompleted(dateStr)) {
+            localStorage.removeItem(`gym_dayCompleted_${dateStr}`);
+        } else {
+            localStorage.setItem(`gym_dayCompleted_${dateStr}`, 'true');
+        }
+        updateStreak();
+        renderCalendar();
+    };
+
+    const renderCalendar = () => {
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        calendarMonthYear.textContent = `${monthNames[currentViewMonth]} ${currentViewYear}`;
+        
+        // Remove existing day squares
+        const daySquares = calendarGrid.querySelectorAll('.calendar-day');
+        daySquares.forEach(el => el.remove());
+        
+        const firstDay = new Date(currentViewYear, currentViewMonth, 1).getDay();
+        const daysInMonth = new Date(currentViewYear, currentViewMonth + 1, 0).getDate();
+        
+        // Add empty spaces for first day
+        for (let i = 0; i < firstDay; i++) {
+            const empty = document.createElement('div');
+            empty.className = 'calendar-day empty';
+            calendarGrid.appendChild(empty);
+        }
+        
+        let completedCount = 0;
+        let elapsedCount = 0;
+
+        for (let date = 1; date <= daysInMonth; date++) {
+            const currentObj = new Date(currentViewYear, currentViewMonth, date);
+            const currentStr = getDateString(currentObj);
+            
+            const square = document.createElement('div');
+            square.className = 'calendar-day';
+            square.textContent = date;
+            
+            const completed = isDayCompleted(currentStr);
+            
+            const currentZero = new Date(currentObj); currentZero.setHours(0,0,0,0);
+            const todayZero = new Date(); todayZero.setHours(0,0,0,0);
+            
+            if (completed) {
+                square.classList.add('completed');
+                completedCount++;
+            } else if (currentZero.getTime() === todayZero.getTime()) {
+                square.classList.add('today');
+            } else if (currentZero.getTime() < todayZero.getTime()) {
+                square.classList.add('missed');
+            } else {
+                square.classList.add('future');
+            }
+            
+            if (currentZero.getTime() <= todayZero.getTime()) {
+                elapsedCount++;
+            }
+            
+            square.addEventListener('click', () => {
+                toggleDayCompletion(currentStr);
+                // After toggling, open modal with new state
+                openModal(currentObj, currentStr, isDayCompleted(currentStr));
+            });
+            calendarGrid.appendChild(square);
+        }
+        
+        const consistency = elapsedCount === 0 ? 0 : Math.round((completedCount / elapsedCount) * 100);
+        
+        // Update both expanded and collapsed stats
+        workoutsMonthCount.textContent = completedCount;
+        consistencyPercent.textContent = `${consistency}%`;
+        summaryWorkouts.textContent = completedCount;
+        summaryConsistency.textContent = `${consistency}%`;
+    };
+
+    const openModal = (dateObj, dateStr, completed) => {
+        const options = { day: 'numeric', month: 'long', year: 'numeric' };
+        modalDate.textContent = dateObj.toLocaleDateString('en-GB', options);
+        
+        if (completed) {
+            modalStatus.textContent = 'Workout Completed';
+            modalStatus.className = 'modal-status completed';
+            
+            const daysMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const dayName = daysMap[dateObj.getDay()];
+            const workout = workoutData.find(w => w.name === dayName);
+            
+            if (workout) {
+                modalDetails.textContent = `${workout.name} - ${workout.focus}\nCompleted`;
+            } else {
+                modalDetails.textContent = 'Workout Recorded';
+            }
+        } else {
+            const currentZero = new Date(dateObj); currentZero.setHours(0,0,0,0);
+            const todayZero = new Date(); todayZero.setHours(0,0,0,0);
+            
+            if (currentZero.getTime() > todayZero.getTime()) {
+                modalStatus.textContent = 'Upcoming Day';
+                modalStatus.className = 'modal-status';
+            } else {
+                modalStatus.textContent = 'Not Completed';
+                modalStatus.className = 'modal-status missed';
+            }
+            modalDetails.textContent = '';
+        }
+        
+        calendarModal.classList.remove('hidden');
+    };
+
+    // --- Expand / Collapse Logic ---
+    const applyCalendarState = () => {
+        const isExpanded = localStorage.getItem('gym_calendarExpanded') === 'true';
+        if (isExpanded) {
+            calendarSummary.classList.add('collapsed');
+            calendarExpanded.classList.remove('collapsed');
+        } else {
+            calendarSummary.classList.remove('collapsed');
+            calendarExpanded.classList.add('collapsed');
+        }
+    };
+
+    const toggleCalendar = () => {
+        const isExpanded = localStorage.getItem('gym_calendarExpanded') === 'true';
+        localStorage.setItem('gym_calendarExpanded', !isExpanded);
+        applyCalendarState();
+    };
+
+    toggleCalendarDown.addEventListener('click', toggleCalendar);
+    toggleCalendarUp.addEventListener('click', toggleCalendar);
+
+    // --- Month Navigation ---
+    prevMonthBtn.addEventListener('click', () => {
+        currentViewMonth--;
+        if (currentViewMonth < 0) {
+            currentViewMonth = 11;
+            currentViewYear--;
+        }
+        renderCalendar();
+    });
+
+    nextMonthBtn.addEventListener('click', () => {
+        currentViewMonth++;
+        if (currentViewMonth > 11) {
+            currentViewMonth = 0;
+            currentViewYear++;
+        }
+        renderCalendar();
+    });
+
+    goTodayBtn.addEventListener('click', () => {
+        const today = new Date();
+        currentViewMonth = today.getMonth();
+        currentViewYear = today.getFullYear();
+        renderCalendar();
+    });
+
     // --- Event Listeners ---
+    closeModalBtn.addEventListener('click', () => {
+        calendarModal.classList.add('hidden');
+    });
+    
+    calendarModal.addEventListener('click', (e) => {
+        if (e.target === calendarModal) calendarModal.classList.add('hidden');
+    });
+
     backBtn.addEventListener('click', () => {
         showView('home');
     });
 
     // --- Init ---
+    applyCalendarState();
     renderStreak();
+    renderCalendar();
     renderHome();
 });

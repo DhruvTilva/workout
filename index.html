@@ -23,9 +23,52 @@
     <!-- Main Container -->
     <main class="app-container">
         
+        <!-- Calendar Section (Visible on Home) -->
+        <section id="calendar-section" class="calendar-section view active">
+            <h2 class="section-title">📅 Workout History</h2>
+            
+            <div id="calendar-summary" class="calendar-summary">
+                <div class="calendar-stats mb-3">
+                    <p>🔥 Workouts This Month: <span id="summary-workouts" class="stat-highlight">0</span></p>
+                    <p>📊 Consistency: <span id="summary-consistency" class="stat-highlight">0%</span></p>
+                </div>
+                <button id="toggle-calendar-down" class="btn-toggle">▼ Show Calendar</button>
+            </div>
+
+            <div id="calendar-expanded" class="calendar-expandable">
+                <div class="calendar-header-nav">
+                    <button id="prev-month-btn" class="nav-btn">◀</button>
+                    <h3 id="calendar-month-year">Month Year</h3>
+                    <button id="next-month-btn" class="nav-btn">▶</button>
+                </div>
+                
+                <div class="calendar-today-action">
+                    <button id="go-today-btn" class="btn-secondary">Today</button>
+                </div>
+
+                <div class="calendar-grid">
+                    <div class="day-name">Su</div>
+                    <div class="day-name">Mo</div>
+                    <div class="day-name">Tu</div>
+                    <div class="day-name">We</div>
+                    <div class="day-name">Th</div>
+                    <div class="day-name">Fr</div>
+                    <div class="day-name">Sa</div>
+                    <!-- Calendar days injected via JS -->
+                </div>
+
+                <div class="calendar-stats mb-3">
+                    <p>Workouts This Month: <span id="workouts-month-count" class="stat-highlight">0</span></p>
+                    <p>Consistency: <span id="consistency-percent" class="stat-highlight">0%</span></p>
+                </div>
+                
+                <button id="toggle-calendar-up" class="btn-toggle">▲ Hide Calendar</button>
+            </div>
+        </section>
+
         <!-- View 1: Home View (Days List) -->
         <section id="home-view" class="view active">
-            <h1 class="page-title">My Workouts</h1>
+            <h2 class="section-title">My Workouts</h2>
             <div id="days-container" class="days-grid">
                 <!-- Day cards injected via JS -->
             </div>
@@ -57,6 +100,16 @@
         </section>
 
     </main>
+
+    <!-- Calendar Modal -->
+    <div id="calendar-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button id="close-modal-btn" class="modal-close">×</button>
+            <h3 id="modal-date">Date</h3>
+            <div id="modal-status" class="modal-status">Status</div>
+            <div id="modal-details" class="modal-details"></div>
+        </div>
+    </div>
 
     <script src="data.js"></script>
     <script src="app.js"></script>

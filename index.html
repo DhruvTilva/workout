@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gym Companion</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+
+    <!-- Header Section -->
+    <header class="app-header">
+        <div class="streak-container">
+            <span class="streak-icon">🔥</span>
+            <span class="streak-text">Workout Streak: <span id="streak-count">0</span> Days</span>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="app-container">
+        
+        <!-- View 1: Home View (Days List) -->
+        <section id="home-view" class="view active">
+            <h1 class="page-title">My Workouts</h1>
+            <div id="days-container" class="days-grid">
+                <!-- Day cards injected via JS -->
+            </div>
+        </section>
+
+        <!-- View 2: Workout View (Exercises List) -->
+        <section id="workout-view" class="view">
+            <div class="workout-header-nav">
+                <button id="back-btn" class="icon-btn" aria-label="Back to home">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                </button>
+                <h2 id="workout-day-title" class="page-title small">Workout Day</h2>
+            </div>
+
+            <!-- Progress Bar Sticky Header -->
+            <div class="progress-sticky-header">
+                <div class="progress-stats">
+                    <span class="progress-label">Progress:</span>
+                    <span class="progress-ratio"><span id="progress-completed">0</span> / <span id="progress-total">0</span></span>
+                </div>
+                <div class="progress-bar-container">
+                    <div id="progress-bar-fill" class="progress-bar-fill"></div>
+                </div>
+            </div>
+
+            <div id="exercises-container" class="exercises-list">
+                <!-- Exercise cards injected via JS -->
+            </div>
+        </section>
+
+    </main>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
